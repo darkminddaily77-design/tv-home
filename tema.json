@@ -1,7 +1,10 @@
 {
   "backend": "tv",
   "mode": "gelap",
-  "latar": "gradasi",
+  "latar": "foto",
+  "m1": "http://192.168.0.109:4520",
+  "wallpaperNama": "tlztwd1srjv2f5fe",
+  "wallpaperWarna": "#000000",
   "belakang": "wallpaper/langit.svg",
   "depan": "wallpaper/depan.svg",
   "jamWarna": {

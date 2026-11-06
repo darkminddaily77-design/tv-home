@@ -11,6 +11,7 @@
     {"label": "Netflix", "ikon": "ikon/netflix.svg", "app": "3201907018807"},
     {"label": "Spotify", "ikon": "ikon/spotify.svg", "app": "3201606009684"},
     {"label": "Mode tidur", "ikon": "ikon/bulan.svg", "aksi": "tidur"},
+    {"label": "Lainnya", "ikon": "ikon/lainnya.svg", "aksi": "lainnya", "isi": [{"label": "Menu Samsung", "jedaJaga": 10, "tombol": "KEY_HOME"}]},
     {"label": "Matiin layar", "ikon": "ikon/power.svg", "tombol": "KEY_POWER"}
   ]
 }

@@ -11,6 +11,10 @@ Isinya:
 
 Gerakinnya pake remote: kiri/kanan, atas/bawah, OK buat buka, Back balik ke awal.
 
+Wallpaper foto dan "penjaga tombol Home" dikasih sama server kecil di M1 (di jaringan rumah). Kalau M1 lagi mati, home tetap jalan: latarnya balik ke gradasi dan tombol Home kerja kayak biasa.
+- Kepencet Home: Zee Home balik sendiri dalam sekejap.
+- Mau ke menu Samsung: pencet Home dua kali, atau ikon gir **Lainnya** → **Menu Samsung** (penjaga istirahat 10 menit).
+
 ## Cara pasang
 
 1. Buka **TizenBrew** di monitor.

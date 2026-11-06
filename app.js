@@ -32,7 +32,7 @@
 
   function $(id) { return document.getElementById(id); }
   var el = {
-    belakang: $('belakang'), depan: $('depan'), jamGelap: $('jamGelap'), jamTerang: $('jamTerang'), tanggalBaris: $('tanggalBaris'),
+    belakang: $('belakang'), depan: $('depan'), foto: $('foto'), jamGelap: $('jamGelap'), jamTerang: $('jamTerang'), tanggalBaris: $('tanggalBaris'),
     tanggal: $('tanggal'), cuaca: $('cuaca'), toast: $('toast'),
     kolomKiri: $('kolomKiri'), kolomKanan: $('kolomKanan'), dockIsi: $('dockIsi'),
     tidur: $('tidur'), tidurGeser: $('tidurGeser'), tidurJam: $('tidurJam'), tidurTanggal: $('tidurTanggal'),
@@ -223,13 +223,41 @@
     modeSekarang = m;
     document.documentElement.className = 'mode-' + m;
   }
+  // alamat foto wallpaper: wallpaperUrl (preview Mac), atau M1 + /w/<nama>.jpeg (di monitor)
+  function sumberWallpaper() {
+    if (tema.wallpaperUrl) return String(tema.wallpaperUrl);
+    if (tema.m1 && tema.wallpaperNama) return String(tema.m1).replace(/\/+$/, '') + '/w/' + tema.wallpaperNama + '.jpeg';
+    return '';
+  }
+  // foto: kalau 4 detik belum kebuka, diem aja tetap pake gradasi (nggak ganti belakangan)
+  function muatFoto(src) {
+    var img = el.foto, selesai = false;
+    var batas = setTimeout(function () { selesai = true; img.removeAttribute('src'); }, 4000);
+    img.onload = function () {
+      if (selesai) return;
+      selesai = true;
+      clearTimeout(batas);
+      document.body.classList.remove('latar-gradasi');
+      document.body.classList.add('latar-foto');
+      img.classList.add('siap');
+    };
+    img.onerror = function () { selesai = true; clearTimeout(batas); };
+    img.src = src;
+  }
   function terapkanTema(t) {
     tema = t || {};
-    var latar = param('latar') || tema.latar || 'gradasi';
-    if (latar !== 'pemandangan') latar = 'gradasi';
+    var foto = sumberWallpaper();
+    var latar = param('latar') || tema.latar || (foto ? 'foto' : 'gradasi');
+    if (latar !== 'pemandangan' && latar !== 'foto') latar = 'gradasi';
+    if (latar === 'foto' && !foto) latar = 'gradasi';
     var ringan = tema.kacaRingan || param('kaca') === 'ringan';
-    document.body.className = 'latar-' + latar + (ringan ? ' kaca-ringan' : '');
+    // mode foto mulai dari gradasi dulu, baru ganti kalau fotonya udah kebuka
+    document.body.className = 'latar-' + (latar === 'foto' ? 'gradasi' : latar) + (ringan ? ' kaca-ringan' : '');
+    document.documentElement.style.setProperty('--warna-foto', tema.wallpaperWarna || '#000000');
+    if (latar === 'foto') muatFoto(foto);
     window.Aksi.pakai(tema.backend || 'mac');
+    // penjaga tombol Home di M1: cuma dari monitor (backend tv), atau kalau dinyalain sendiri
+    if (tema.m1 && (tema.backend === 'tv' || tema.m1Aktif)) window.Aksi.pakaiM1(tema.m1);
 
     var belakang = tema.belakang || 'wallpaper/langit.svg', depan = tema.depan || 'wallpaper/depan.svg';
     if (latar === 'pemandangan') {
@@ -454,10 +482,68 @@
     void m.offsetWidth;
     m.classList.add('tekan');
   }
+  // ---------- "Lainnya": daftar kecil di atas ikon gir ----------
+  var lainnya = { el: null, items: [], idx: 0, sumber: null, buka: false };
+  function tutupLainnya() {
+    var p = lainnya.el;
+    lainnya = { el: null, items: [], idx: 0, sumber: null, buka: false };
+    if (!p) return;
+    p.classList.remove('buka');
+    setTimeout(function () { if (p.parentNode) p.parentNode.removeChild(p); }, 400);
+  }
+  function fokusLainnya(i) {
+    if (!lainnya.items.length) return;
+    i = clamp(i, 0, lainnya.items.length - 1);
+    lainnya.items.forEach(function (x, k) { x.el.classList.toggle('is-focus', k === i); });
+    lainnya.idx = i;
+  }
+  function pilihLainnya(i) {
+    var x = lainnya.items[i];
+    tutupLainnya();
+    if (x) aktifkan(x.data, null);
+  }
+  function bukaLainnya(t, n) {
+    if (lainnya.buka && lainnya.sumber === n) return tutupLainnya();
+    tutupLainnya();
+    var isi = (t.isi || []).filter(function (x) { return x && x.label; });
+    if (!isi.length || !n) return;
+    var p = buat('div', 'lainnya');
+    p.setAttribute('role', 'menu');
+    p.appendChild(permukaan('kaca'));
+    var wadah = buat('div', 'lainnya-isi');
+    var baris = isi.map(function (x, i) {
+      var r = buat('div', 'lainnya-item', x.label);
+      r.setAttribute('role', 'menuitem');
+      r.addEventListener('mouseenter', function () { fokusLainnya(i); });
+      r.addEventListener('click', function (e) { e.stopPropagation(); pilihLainnya(i); });
+      wadah.appendChild(r);
+      return { el: r, data: x };
+    });
+    p.appendChild(wadah);
+    var stage = document.querySelector('.stage');
+    stage.appendChild(p);
+    var rs = stage.getBoundingClientRect(), rn = n.getBoundingClientRect();
+    p.style.left = ((rn.left + rn.width / 2 - rs.left) / rs.width * 100) + '%';
+    lainnya = { el: p, items: baris, idx: 0, sumber: n, buka: true };
+    fokusLainnya(0);
+    void p.offsetWidth;
+    p.classList.add('buka');
+  }
+  document.addEventListener('click', function (e) {
+    if (lainnya.buka && !lainnya.el.contains(e.target) && !(lainnya.sumber && lainnya.sumber.contains(e.target))) tutupLainnya();
+  }, true);
+
   function aktifkan(t, n) {
     if (!t) return;
     tekan(n);
+    if (t.aksi === 'lainnya') return bukaLainnya(t, n);
     if (t.aksi === 'tidur') return later('masukTidur', 280, masukTidur);
+    // pindah dengan sengaja (HDMI, layar Mac, menu Samsung): penjaga di M1 istirahat dulu
+    if (t.jedaJaga) window.Aksi.jedaJaga(t.jedaJaga);
+    if (t.petunjuk) {
+      toast(t.petunjuk, 9000);
+      if (!t.app && !t.url && !t.tombol) return;
+    }
     var kunci = t.label + '|' + (t.app || t.url || t.tombol || '');
     var now = Date.now();
     if (sibuk[kunci] && sibuk[kunci] > now) return;
@@ -512,6 +598,7 @@
   function masukTidur() {
     if (tidur) return;
     tidur = true;
+    tutupLainnya();
     el.toast.classList.remove('show');
     geserTidur();
     el.tidur.classList.add('on');
@@ -546,6 +633,17 @@
       keluarTidur();
       return;
     }
+    if (lainnya.buka) {
+      switch (e.keyCode) {
+        case 38: fokusLainnya(lainnya.idx - 1); break;
+        case 40: fokusLainnya(lainnya.idx + 1); break;
+        case 13: case 32: case 415: case 10252: if (!e.repeat) pilihLainnya(lainnya.idx); break;
+        case 10009: case 27: case 8: case 37: case 39: tutupLainnya(); break;
+        default: return;
+      }
+      e.preventDefault();
+      return;
+    }
     if (!items.length) return;
     switch (e.keyCode) {
       case 37: pindah(-1, 0); break;                           // kiri
@@ -566,8 +664,11 @@
       try { window.tizen.tvinputdevice.registerKey(k); } catch (e) { /* tombol nggak ada */ }
     });
   }
+  // detak buat penjaga tombol Home di M1, tiap 0,5 detik selama halaman keliatan (cuma kalau M1 dipake)
+  setInterval(function () { if (document.visibilityState === 'visible') window.Aksi.detak(); }, 500);
   document.addEventListener('visibilitychange', function () {
-    if (document.hidden) { window.Power.batal(); return; }
+    if (document.hidden) { window.Aksi.sembunyi(); window.Power.batal(); return; }
+    window.Aksi.detak();
     if (tidur) jadwalMati();   // balik keliatan pas lagi tidur: hitung ulang dari awal
     tick();
     terakhirAksi = Date.now();

@@ -2,7 +2,9 @@
      mac = server.py di laptop M5
      tv  = service.js di monitor sendiri (modul TizenBrew), di http://127.0.0.1:8097
    Pilih jalurnya di tema.json: "backend": "mac" atau "tv".
-   Semua fungsi balikin Promise berisi {ok: true/false, error?: "...", belumNyambung?: true}. */
+   Semua fungsi balikin Promise berisi {ok: true/false, error?: "...", belumNyambung?: true}.
+   Plus "m1": server kecil di M1 (wallpaper + penjaga tombol Home). Semua panggilan ke M1
+   "lempar terus lupa": batas waktu pendek, error diabaikan, UI nggak pernah nunggu. */
 (function () {
   'use strict';
 
@@ -74,13 +76,36 @@
     }
   };
 
+  // ---------- M1 (penjaga tombol Home) ----------
+  var m1 = '';
+  function keM1(path) {
+    if (!m1) return;
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var t = setTimeout(function () { if (ctrl) ctrl.abort(); }, 1500);
+    try {
+      fetch(m1 + path, { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined })
+        .then(function () { clearTimeout(t); }, function () { clearTimeout(t); });
+    } catch (e) { clearTimeout(t); }
+  }
+
   var aktif = 'mac';
   window.Aksi = {
     pakai: function (nama) { aktif = BACKEND[nama] ? nama : 'mac'; return aktif; },
     backend: function () { return aktif; },
-    bukaApp: function (id) { return BACKEND[aktif].bukaApp(id); },
-    tombol: function (key) { return BACKEND[aktif].tombol(key); },
+    pakaiM1: function (url) { m1 = String(url || '').replace(/\/+$/, ''); },
+    detak: function () { keM1('/detak'); },
+    // halaman baru aja ketutup (mis. Zee pencet Home): kirim 2 cara biar pasti nyampe di browser lama
+    sembunyi: function () {
+      if (!m1) return;
+      try { fetch(m1 + '/sembunyi', { cache: 'no-store', keepalive: true }).catch(function () {}); } catch (e) { /* abaikan */ }
+      try { new Image().src = m1 + '/sembunyi?t=' + Date.now(); } catch (e) { /* abaikan */ }
+    },
+    jedaJaga: function (menit) { keM1('/jeda?menit=' + enc(menit || 10)); },
+    // buka app dengan sengaja: kasih tau penjaga dulu biar app-nya nggak "ditarik balik"
+    bukaApp: function (id) { keM1('/niat?app=' + enc(id)); return BACKEND[aktif].bukaApp(id); },
+    // matiin layar: penjaga istirahat 2 menit dulu biar nggak "narik balik" pas monitor lagi mati
+    tombol: function (key) { if (key === 'KEY_POWER') keM1('/jeda?menit=2'); return BACKEND[aktif].tombol(key); },
     bukaUrl: function (url) { return BACKEND[aktif].bukaUrl(url); },
-    matikanLayar: function () { return BACKEND[aktif].matikanLayar(); }
+    matikanLayar: function () { keM1('/jeda?menit=2'); return BACKEND[aktif].matikanLayar(); }
   };
 })();
