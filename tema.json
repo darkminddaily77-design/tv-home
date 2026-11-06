@@ -30,7 +30,7 @@
   "jamUkuran": 16,
   "tidurMenit": 10,
   "matiSetelahTidurMenit": 60,
-  "kacaRingan": false,
+  "kacaRingan": true,
   "cuaca": {
     "kota": "Denpasar",
     "lat": -8.65,
