@@ -1,12 +1,18 @@
-/* Home screen monitor v2: jam besar di tengah, widget kaca kiri-kanan, dock kaca di bawah.
+/* Zee Home 1.0.1: jam besar di tengah, widget kaca gelap kiri-kanan, dock kaca di bawah.
    Target: Samsung Browser Tizen 6.5 (~Chromium 85). Nggak pake :has(), container query, nesting.
-   --u = 1% lebar panggung UI (muat di layar), --w = 1% lebar latar (nutup layar). Di TV 16:9 = 1vw.
-   --tint = warna dasar kaca, diisi app.js sesuai latar. */
+
+   Ukuran:
+     --u = 1% lebar panggung UI (muat di layar), --w = 1% lebar latar (nutup layar). Di TV 16:9 = 1vw.
+     --g = satu satuan grid (0,8% lebar). Semua jarak = kelipatan --g.
+   Tata letak (dalam g, layar = 125 x 70,3 g):
+     pinggir kiri/kanan 6g, kolom widget 29g, widget 18g, celah 2g, kolom 11g..49g,
+     dock 53g..64g (tinggi 11g: ikon 7g + 2g atas/bawah), isi widget 2g dari pinggir. */
 
 :root {
   --u: 1vw;
   --w: 1vw;
-  --tint: 62, 24, 58;
+  --g: calc(var(--u) * 0.8);
+  --tint: 30, 28, 40;
   --mode-waktu: 1.5s;
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --pegas: cubic-bezier(0.3, 1.3, 0.55, 1);   /* kayak per: lewat dikit, terus diem */
@@ -19,20 +25,22 @@
     --w: max(1vw, 1.7778vh);
   }
 }
-/* dua tampilan: satu class di <html> ganti semuanya */
+
+/* gelap = bawaan. terang cuma kalau dipilih di tema.json */
 html.mode-gelap {
-  --ink: #ffffff;
-  --abu: rgba(255, 255, 255, 0.62);
-  --glyph: #ffffff;
-  --tanggal: rgba(255, 252, 254, 0.92);
-  --teks-bayang: rgba(14, 4, 24, 0.3);
-  --kaca-warna: rgba(var(--tint), 0.16);
-  --kaca-padat: rgba(var(--tint), 0.84);
-  --ubin-warna: rgba(255, 255, 255, 0.1);
-  --garis: rgba(255, 255, 255, 0);
-  --bayang-pelan: rgba(14, 4, 20, 0.3);
-  --bayang-kuat: rgba(14, 4, 20, 0.48);
-  --cahaya-fokus: rgba(255, 240, 250, 0.16);
+  --ink: #f5f5f7;
+  --abu: rgba(235, 235, 245, 0.6);
+  --glyph: #f5f5f7;
+  --tanggal: rgba(245, 245, 247, 0.86);
+  --teks-bayang: rgba(0, 0, 0, 0.25);
+  --kaca-warna: rgba(28, 28, 32, 0.55);    /* dengan blur */
+  --kaca-padat: rgba(30, 30, 35, 0.9);     /* tanpa blur: tetap kalem */
+  --ubin-warna: rgba(255, 255, 255, 0.06);
+  --garis: rgba(255, 255, 255, 0.08);
+  --rim: rgba(255, 255, 255, 0.32);
+  --bayang-pelan: rgba(0, 0, 0, 0.28);
+  --bayang-kuat: rgba(0, 0, 0, 0.42);
+  --cahaya-fokus: rgba(255, 255, 255, 0.1);
 }
 html.mode-terang {
   --ink: #1d1d1f;
@@ -40,12 +48,13 @@ html.mode-terang {
   --glyph: #1d1d1f;
   --tanggal: rgba(29, 29, 31, 0.86);
   --teks-bayang: rgba(255, 255, 255, 0);
-  --kaca-warna: rgba(255, 255, 255, 0.52);
-  --kaca-padat: rgba(250, 248, 252, 0.92);
-  --ubin-warna: rgba(255, 255, 255, 0.62);
+  --kaca-warna: rgba(255, 255, 255, 0.55);
+  --kaca-padat: rgba(248, 247, 250, 0.92);
+  --ubin-warna: rgba(255, 255, 255, 0.6);
   --garis: rgba(0, 0, 0, 0.07);
-  --bayang-pelan: rgba(70, 50, 100, 0.1);
-  --bayang-kuat: rgba(70, 50, 100, 0.2);
+  --rim: rgba(255, 255, 255, 0.7);
+  --bayang-pelan: rgba(60, 50, 80, 0.1);
+  --bayang-kuat: rgba(60, 50, 80, 0.18);
   --cahaya-fokus: rgba(255, 255, 255, 0.5);
 }
 
@@ -53,10 +62,10 @@ html, body {
   margin: 0;
   height: 100%;
   overflow: hidden;
-  background: #1a0b16;
+  background: #121217;
   transition: background-color var(--mode-waktu) ease;
 }
-html.mode-terang, html.mode-terang body { background: #f4f1f4; }
+html.mode-terang, html.mode-terang body { background: #f4f2f5; }
 body {
   font-family: var(--font);
   color: var(--ink);
@@ -90,15 +99,15 @@ body {
   transition: opacity 0.8s ease;
 }
 .lapis.siap { opacity: 1; }
+.latar-gradasi #belakang, .latar-gradasi #depan { display: none; }
+.latar-pemandangan .gradasi { display: none; }
 /* urutan lapis tegas: latar < tanggal/jam < gunung depan */
 .gradasi { z-index: 0; }
 #belakang { z-index: 1; }
 .dunia .tanggal, .dunia .jam, .tidur-geser { z-index: 2; }
 #depan, .tidur-depan { z-index: 3; }
-.latar-gradasi #belakang, .latar-gradasi #depan { display: none; }
-.latar-pemandangan .gradasi { display: none; }
 
-/* gradasi lembut yang "napas" pelan (cuma transform, ringan buat TV) */
+/* gradasi kalem yang "napas" pelan: arang, nila, plum. Cuma transform, ringan buat TV */
 .gradasi {
   position: absolute;
   top: 0;
@@ -106,23 +115,7 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: linear-gradient(125deg, #3f0919 0%, #651028 32%, #3a1342 62%, #0d3150 100%);
-}
-.gradasi-terang {
-  background: linear-gradient(125deg, #f7f1f3 0%, #f3eef8 45%, #eef3f9 100%);
-}
-.gradasi-terang .b1 { background: radial-gradient(closest-side, rgba(255, 196, 218, 0.85), rgba(255, 196, 218, 0)); }
-.gradasi-terang .b2 { background: radial-gradient(closest-side, rgba(190, 222, 255, 0.85), rgba(190, 222, 255, 0)); }
-.gradasi-terang .b3 { background: radial-gradient(closest-side, rgba(222, 208, 255, 0.85), rgba(222, 208, 255, 0)); }
-.gradasi-terang .b4 { background: radial-gradient(closest-side, rgba(255, 214, 226, 0.7), rgba(255, 214, 226, 0)); }
-.gradasi, .jam-gelap, .jam-terang {
-  transition: opacity var(--mode-waktu) ease, visibility 0s linear 0s;
-}
-html.mode-terang .gradasi-gelap, html.mode-gelap .gradasi-terang,
-html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity var(--mode-waktu) ease, visibility 0s linear var(--mode-waktu);
+  background: linear-gradient(125deg, #111116 0%, #15151f 42%, #1a1520 72%, #121722 100%);
 }
 .blob {
   position: absolute;
@@ -134,42 +127,59 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
   top: 4%;
   width: 78%;
   height: 125%;
-  background: radial-gradient(closest-side, rgba(190, 28, 66, 0.8), rgba(190, 28, 66, 0));
-  animation: napas1 26s ease-in-out infinite alternate;
+  background: radial-gradient(closest-side, rgba(74, 52, 88, 0.55), rgba(74, 52, 88, 0));
+  animation: napas1 30s ease-in-out infinite alternate;
 }
 .b2 {
   right: -18%;
   top: -42%;
   width: 72%;
   height: 120%;
-  background: radial-gradient(closest-side, rgba(22, 118, 150, 0.72), rgba(22, 118, 150, 0));
-  animation: napas2 31s ease-in-out infinite alternate;
+  background: radial-gradient(closest-side, rgba(44, 60, 92, 0.5), rgba(44, 60, 92, 0));
+  animation: napas2 36s ease-in-out infinite alternate;
 }
 .b3 {
   left: 22%;
   bottom: -52%;
   width: 74%;
   height: 110%;
-  background: radial-gradient(closest-side, rgba(104, 36, 136, 0.66), rgba(104, 36, 136, 0));
-  animation: napas3 29s ease-in-out infinite alternate;
+  background: radial-gradient(closest-side, rgba(56, 50, 96, 0.45), rgba(56, 50, 96, 0));
+  animation: napas3 33s ease-in-out infinite alternate;
 }
 .b4 {
   right: -12%;
   bottom: -34%;
   width: 58%;
   height: 95%;
-  background: radial-gradient(closest-side, rgba(168, 24, 58, 0.62), rgba(168, 24, 58, 0));
-  animation: napas4 35s ease-in-out infinite alternate;
+  background: radial-gradient(closest-side, rgba(70, 44, 70, 0.42), rgba(70, 44, 70, 0));
+  animation: napas4 40s ease-in-out infinite alternate;
 }
+.gradasi-terang {
+  background: linear-gradient(125deg, #f6f3f5 0%, #f2eff7 45%, #eef2f7 100%);
+}
+.gradasi-terang .b1 { background: radial-gradient(closest-side, rgba(240, 210, 224, 0.7), rgba(240, 210, 224, 0)); }
+.gradasi-terang .b2 { background: radial-gradient(closest-side, rgba(208, 224, 242, 0.7), rgba(208, 224, 242, 0)); }
+.gradasi-terang .b3 { background: radial-gradient(closest-side, rgba(224, 216, 244, 0.7), rgba(224, 216, 244, 0)); }
+.gradasi-terang .b4 { background: radial-gradient(closest-side, rgba(238, 220, 230, 0.6), rgba(238, 220, 230, 0)); }
 @keyframes napas1 { to { transform: translate3d(6%, -5%, 0) scale(1.08); } }
 @keyframes napas2 { to { transform: translate3d(-7%, 6%, 0) scale(1.1); } }
 @keyframes napas3 { to { transform: translate3d(5%, -6%, 0) scale(0.94); } }
 @keyframes napas4 { to { transform: translate3d(-6%, -4%, 0) scale(1.06); } }
 
+.gradasi, .jam-gelap, .jam-terang {
+  transition: opacity var(--mode-waktu) ease, visibility 0s linear 0s;
+}
+html.mode-terang .gradasi-gelap, html.mode-gelap .gradasi-terang,
+html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--mode-waktu) ease, visibility 0s linear var(--mode-waktu);
+}
+
 .jam {
   position: absolute;
   left: 0;
-  top: 16.2%;
+  top: 17.7%;
   width: 100%;
   text-align: center;
   font-size: calc(var(--w) * 16);
@@ -177,24 +187,24 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
   line-height: 1;
   letter-spacing: -0.035em;
   white-space: nowrap;
-  color: #f6d3e6;
+  color: #dcd8ec;
   opacity: 0;
   transition: opacity 0.8s ease;
 }
 @supports (-webkit-background-clip: text) {
   .jam {
     color: transparent;
-    background-image: linear-gradient(100deg, #ffc6dc 0%, #f6d5f0 50%, #d7d2ff 100%);
+    background-image: linear-gradient(100deg, #ecebf3 0%, #dcd8ee 50%, #c9c4e5 100%);
     -webkit-background-clip: text;
     background-clip: text;
   }
 }
-.jam.siap { opacity: 0.97; }
+.jam.siap { opacity: 0.95; }
 .mode-terang .jam-terang.siap { opacity: 1; }
 .tanggal {
   position: absolute;
   left: 0;
-  top: 11%;
+  top: 15.64%;
   width: 100%;
   text-align: center;
   font-size: calc(var(--w) * 1.45);
@@ -217,6 +227,12 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
   vertical-align: -0.17em;
 }
 .cuaca svg { margin-right: 0.3em; }
+/* warna cuma di ikon kecil, dan diredam */
+.ik-cerah { color: #e2c07c; }
+.ik-malam { color: #c8c4e2; }
+.ik-berawan-cerah, .ik-berawan, .ik-kabut { color: #b7bbc7; }
+.ik-hujan { color: #9fb2cb; }
+.ik-petir { color: #d6c38c; }
 
 .grain {
   position: fixed;
@@ -225,22 +241,22 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
   width: 100%;
   height: 100%;
   background: url(grain.png) repeat;
-  opacity: 0.5;
+  opacity: 0.45;
   pointer-events: none;
   transition: opacity var(--mode-waktu) ease;
 }
-.mode-terang .grain { opacity: 0.22; }
-.mode-terang .gelap-bawah { opacity: 0; }
+.mode-terang .grain { opacity: 0.2; }
 .gelap-bawah {
   position: fixed;
   left: 0;
   bottom: 0;
   width: 100%;
   height: 40%;
-  background: linear-gradient(to bottom, rgba(10, 6, 14, 0) 0%, rgba(10, 6, 14, 0.22) 60%, rgba(10, 6, 14, 0.42) 100%);
+  background: linear-gradient(to bottom, rgba(8, 8, 12, 0) 0%, rgba(8, 8, 12, 0.2) 60%, rgba(8, 8, 12, 0.36) 100%);
   pointer-events: none;
   transition: opacity var(--mode-waktu) ease;
 }
+.mode-terang .gelap-bawah { opacity: 0; }
 
 /* ---------- panggung UI 16:9 ---------- */
 .stage {
@@ -256,15 +272,14 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
 .bisa-fokus {
   --rx: 0deg;
   --ry: 0deg;
-  --s: 1.08;
-  --r: calc(var(--u) * 1.6);
+  --s: 1.06;
   cursor: pointer;
   transform: perspective(calc(var(--u) * 60)) translate3d(0, 0, 0) scale(1) rotateX(var(--rx)) rotateY(var(--ry));
   transition: transform 0.36s var(--pegas);
   will-change: transform;
 }
 .bisa-fokus.is-focus {
-  transform: perspective(calc(var(--u) * 60)) translate3d(0, calc(var(--u) * -0.5), 0) scale(var(--s)) rotateX(var(--rx)) rotateY(var(--ry));
+  transform: perspective(calc(var(--u) * 60)) translate3d(0, calc(var(--g) * -0.6), 0) scale(var(--s)) rotateX(var(--rx)) rotateY(var(--ry));
 }
 .bisa-fokus.ikut-mouse { transition: transform 0.2s ease-out; }
 .bayang {
@@ -274,8 +289,8 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
   width: 88%;
   height: 92%;
   border-radius: var(--r);
-  box-shadow: 0 calc(var(--u) * 0.8) calc(var(--u) * 1.8) var(--bayang-pelan);
-  transition: opacity 0.36s ease, box-shadow var(--mode-waktu) ease;
+  box-shadow: 0 calc(var(--g) * 1) calc(var(--g) * 2.2) var(--bayang-pelan);
+  transition: opacity 0.36s ease;
 }
 .bayang-fokus {
   position: absolute;
@@ -284,19 +299,17 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
   width: 92%;
   height: 90%;
   border-radius: var(--r);
-  box-shadow: 0 calc(var(--u) * 1.8) calc(var(--u) * 3.4) var(--bayang-kuat),
-              0 0 calc(var(--u) * 2.2) var(--cahaya-fokus);
+  box-shadow: 0 calc(var(--g) * 2.2) calc(var(--g) * 4.2) var(--bayang-kuat),
+              0 0 calc(var(--g) * 2.6) var(--cahaya-fokus);
   opacity: 0;
   transition: opacity 0.36s ease;
 }
 .is-focus .bayang-fokus { opacity: 1; }
 .is-focus .bayang { opacity: 0; }
 
-/* ---------- bahan kaca ----------
-   .permukaan  = bentuk + isi
-   .kaca       = blur latar di belakangnya (backdrop-filter) + warna tipis
-   .kaca-isi   = kaca tanpa blur sendiri (dipake di atas kaca lain, mis. ikon di dock)
-   .rim        = pinggiran mengkilap 1px, paling terang kiri atas, plus pita terang di sepertiga atas */
+/* ---------- bahan kaca gelap ----------
+   .permukaan = bentuk; .kaca = kaca asap (blur kalau bisa, kalau nggak: warna padat yang sama kalemnya)
+   .kaca-isi = ubin di atas kaca lain (tanpa blur sendiri); .rim = pinggiran 1px + cahaya tipis di atas */
 .permukaan {
   position: absolute;
   top: 0;
@@ -306,36 +319,24 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
   overflow: hidden;
   border-radius: var(--r);
   box-shadow: inset 0 0 0 1px var(--garis),
-              inset 0 calc(var(--u) * -0.7) calc(var(--u) * 1.3) calc(var(--u) * -0.6) rgba(14, 4, 24, 0.22),
-              inset 0 0 calc(var(--u) * 0.9) rgba(255, 255, 255, 0.05);
+              inset 0 calc(var(--g) * -1) calc(var(--g) * 2) calc(var(--g) * -1) rgba(0, 0, 0, 0.18);
   transition: background-color var(--mode-waktu) ease, box-shadow var(--mode-waktu) ease;
 }
 .kaca {
-  /* cadangan kalau blur nggak didukung: kaca buram agak padat */
   background-color: var(--kaca-padat);
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.08) 34%, rgba(255, 255, 255, 0.05) 100%);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0) 45%);
 }
 @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
   .kaca {
     background-color: var(--kaca-warna);
-    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.17) 0%, rgba(255, 255, 255, 0.06) 34%, rgba(255, 255, 255, 0.02) 62%, rgba(255, 255, 255, 0.05) 100%);
-    -webkit-backdrop-filter: blur(calc(var(--u) * 1.8)) saturate(1.7);
-    backdrop-filter: blur(calc(var(--u) * 1.8)) saturate(1.7);
+    -webkit-backdrop-filter: blur(calc(var(--u) * 1.8)) saturate(1.25);
+    backdrop-filter: blur(calc(var(--u) * 1.8)) saturate(1.25);
   }
 }
 .kaca-isi {
   background-color: var(--ubin-warna);
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 45%, rgba(255, 255, 255, 0) 100%);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 50%);
 }
-/* isi widget berwarna (cuaca, gradasi) selalu putih, di mode apa pun */
-.warna-tetap {
-  color: #ffffff;
-  --abu: rgba(255, 255, 255, 0.74);
-  --glyph: #ffffff;
-  --teks-bayang: rgba(14, 4, 24, 0.22);
-}
-.glyph, .glyph-pojok { color: var(--glyph); transition: color var(--mode-waktu) ease; }
-.glyph svg, .glyph-pojok svg, .ubin svg { display: block; width: 100%; height: 100%; }
 .rim::before {
   content: "";
   position: absolute;
@@ -345,12 +346,11 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
   bottom: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(140deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.4) 16%, rgba(255, 255, 255, 0.1) 40%,
-              rgba(255, 255, 255, 0.05) 62%, rgba(255, 255, 255, 0.22) 88%, rgba(255, 255, 255, 0.36) 100%);
+  background: linear-gradient(140deg, var(--rim) 0%, rgba(255, 255, 255, 0.08) 22%, rgba(255, 255, 255, 0.02) 55%, rgba(255, 255, 255, 0.06) 100%);
   -webkit-mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
-  opacity: 0.72;
+  opacity: 0.7;
   transition: opacity 0.36s ease;
   pointer-events: none;
   z-index: 2;
@@ -361,8 +361,8 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
   top: 0;
   left: 0;
   width: 100%;
-  height: 42%;
-  background: radial-gradient(120% 100% at 50% 0%, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.04) 55%, rgba(255, 255, 255, 0) 100%);
+  height: 40%;
+  background: radial-gradient(120% 100% at 50% 0%, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
   pointer-events: none;
   z-index: 1;
 }
@@ -373,7 +373,7 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
   left: -60%;
   width: 45%;
   height: 160%;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.14) 50%, rgba(255, 255, 255, 0) 100%);
   opacity: 0;
   transform: rotate(16deg);
   pointer-events: none;
@@ -388,26 +388,25 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
 .tekan { animation: tekan 0.3s var(--ease); }
 @keyframes tekan {
   0%   { transform: scale(1); }
-  35%  { transform: scale(0.95); }
+  35%  { transform: scale(0.96); }
   100% { transform: scale(1); }
 }
 
-/* ---------- widget kiri-kanan ---------- */
+/* ---------- widget: dua kolom, tinggi sama, tepi atas-bawah sejajar ---------- */
 .kolom {
   position: absolute;
-  top: calc(var(--u) * 10);
-  width: calc(var(--u) * 23);
-  height: calc(var(--u) * 31);
+  top: calc(var(--g) * 11);
+  width: calc(var(--g) * 29);
+  height: calc(var(--g) * 38);
 }
-.kolom-kiri { left: calc(var(--u) * 4.6); }
-.kolom-kanan { right: calc(var(--u) * 4.6); }
+.kolom-kiri { left: calc(var(--g) * 6); }
+.kolom-kanan { right: calc(var(--g) * 6); }
 .widget {
-  --r: calc(var(--u) * 1.6);
-  --s: 1.06;
+  --r: calc(var(--g) * 2);
   position: absolute;
   left: 0;
   width: 100%;
-  height: calc(var(--u) * 14.7);
+  height: calc(var(--g) * 18);
 }
 .widget.slot-atas { top: 0; }
 .widget.slot-bawah { bottom: 0; }
@@ -418,20 +417,20 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  padding: calc(var(--u) * 1.5);
+  padding: calc(var(--g) * 2);
   z-index: 2;
-  text-shadow: 0 calc(var(--u) * 0.05) calc(var(--u) * 0.3) var(--teks-bayang);
+  text-shadow: 0 calc(var(--g) * 0.06) calc(var(--g) * 0.4) var(--teks-bayang);
 }
 .keterangan {
   font-size: calc(var(--u) * 1.2);
   font-weight: 500;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--abu);
   white-space: nowrap;
 }
 .judul {
-  margin-top: calc(var(--u) * 0.35);
+  margin-top: calc(var(--g) * 0.5);
   font-size: calc(var(--u) * 2);
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -440,26 +439,29 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
 }
 .teks-bawah {
   position: absolute;
-  left: calc(var(--u) * 1.5);
-  right: calc(var(--u) * 1.5);
-  bottom: calc(var(--u) * 1.4);
+  left: calc(var(--g) * 2);
+  right: calc(var(--g) * 2);
+  bottom: calc(var(--g) * 2);
 }
+/* glyph SVG punya ruang kosong ~25% di tiap sisi: digeser biar sisi glyph-nya pas di garis isi */
 .glyph-pojok {
   display: block;
-  width: calc(var(--u) * 6);
-  height: calc(var(--u) * 6);
-  margin: calc(var(--u) * -1.2) 0 0 calc(var(--u) * -1.25);
+  width: calc(var(--g) * 6);
+  height: calc(var(--g) * 6);
+  margin: calc(var(--g) * -1.5) 0 0 calc(var(--g) * -1.5);
 }
-/* gaya "album": kotak glyph di kiri, teks di kanan bawah (kayak widget "baru diputar") */
+.glyph, .glyph-pojok { color: var(--glyph); transition: color var(--mode-waktu) ease; }
+.glyph svg, .glyph-pojok svg, .ubin svg { display: block; width: 100%; height: 100%; }
+/* gaya "album" (opsional): kotak glyph di kiri, teks di kanan */
 .album .ubin {
   position: absolute;
-  left: calc(var(--u) * 1.4);
-  top: calc(var(--u) * 1.4);
-  width: calc(var(--u) * 8.6);
-  height: calc(var(--u) * 8.6);
-  border-radius: calc(var(--u) * 1.2);
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(244, 238, 242, 0.88));
-  box-shadow: 0 calc(var(--u) * 0.3) calc(var(--u) * 0.9) rgba(14, 4, 24, 0.25);
+  left: calc(var(--g) * 2);
+  top: calc(var(--g) * 2);
+  width: calc(var(--g) * 14);
+  height: calc(var(--g) * 14);
+  border-radius: calc(var(--g) * 1.4);
+  background: var(--ubin-warna);
+  box-shadow: inset 0 0 0 1px var(--garis);
 }
 .album .ubin img, .album .ubin span {
   position: absolute;
@@ -468,14 +470,10 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
   width: 88%;
   height: 88%;
 }
-.album .ubin { top: 50%; margin-top: calc(var(--u) * -4.3); }
-.album .teks-bawah { left: calc(var(--u) * 11.4); bottom: calc(var(--u) * 3.1); }
+.album .teks-bawah { left: calc(var(--g) * 18); }
+.warna-tetap { color: #ffffff; --abu: rgba(255, 255, 255, 0.72); --glyph: #ffffff; }
 
-/* widget cuaca: warna ikut cuaca, kayak widget cuaca Apple */
-.cuaca-w { background: linear-gradient(165deg, #4a9de6 0%, #2d6fc6 100%); }
-.cuaca-w.berawan { background: linear-gradient(165deg, #7090b2 0%, #4b6585 100%); }
-.cuaca-w.hujan { background: linear-gradient(165deg, #56688a 0%, #2f3b55 100%); }
-.cuaca-w.malam { background: linear-gradient(165deg, #263a74 0%, #101a3d 100%); }
+/* widget cuaca */
 .cuaca-atas {
   display: flex;
   justify-content: space-between;
@@ -485,10 +483,10 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
   font-weight: 500;
 }
 .suhu {
-  font-size: calc(var(--u) * 4.4);
+  font-size: calc(var(--u) * 3.6);
   font-weight: 300;
   line-height: 1;
-  margin-top: calc(var(--u) * 0.2);
+  margin-top: calc(var(--g) * 0.4);
   letter-spacing: -0.02em;
 }
 .kondisi {
@@ -498,74 +496,79 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
   line-height: 1.35;
 }
 .kondisi .ikon-cuaca svg {
-  width: calc(var(--u) * 2);
-  height: calc(var(--u) * 2);
+  width: calc(var(--g) * 2.5);
+  height: calc(var(--g) * 2.5);
 }
+.kondisi .tr { color: var(--abu); }
 .per-jam {
   position: absolute;
-  left: calc(var(--u) * 1.3);
-  right: calc(var(--u) * 1.3);
-  bottom: calc(var(--u) * 1.2);
+  left: calc(var(--g) * 2);
+  right: calc(var(--g) * 2);
+  bottom: calc(var(--g) * 2);
   display: flex;
-  justify-content: space-between;
   text-align: center;
 }
-.per-jam > div { width: 16%; }
+.per-jam > div { flex: 1 1 0; }
 .per-jam .j {
   font-size: calc(var(--u) * 1.2);
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.1;
+  color: var(--abu);
 }
+.per-jam .t { line-height: 1.1; }
 .per-jam .ikon-cuaca svg {
-  width: calc(var(--u) * 1.6);
-  height: calc(var(--u) * 1.6);
-  margin: calc(var(--u) * 0.3) 0;
+  width: calc(var(--g) * 1.6);
+  height: calc(var(--g) * 1.6);
+  margin: calc(var(--g) * 0.25) 0;
   vertical-align: middle;
 }
 .per-jam .t {
-  font-size: calc(var(--u) * 1.3);
+  font-size: calc(var(--u) * 1.25);
   font-weight: 500;
 }
 .cuaca-kosong {
-  margin-top: calc(var(--u) * 1);
+  margin-top: calc(var(--g) * 1);
   font-size: calc(var(--u) * 1.3);
   color: var(--abu);
 }
 
-/* ---------- dock kaca ---------- */
+/* ---------- dock: tepat di tengah, ikon rata, di tengah vertikal ---------- */
 .dock {
   position: absolute;
-  left: 50%;
-  top: calc(var(--u) * 45.2);
-  height: calc(var(--u) * 8.5);
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: -webkit-fit-content;
+  width: fit-content;
+  top: calc(var(--g) * 53);
+  height: calc(var(--g) * 11);
 }
 .dock-kaca {
+  --r: calc(var(--g) * 3.75);
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  border-radius: calc(var(--u) * 2.5);
-  overflow: hidden;
-  box-shadow: 0 calc(var(--u) * 1) calc(var(--u) * 2.6) rgba(14, 4, 20, 0.32),
-              inset 0 calc(var(--u) * -0.6) calc(var(--u) * 1.2) calc(var(--u) * -0.6) rgba(14, 4, 24, 0.25);
+  border-radius: var(--r);
+  box-shadow: inset 0 0 0 1px var(--garis), 0 calc(var(--g) * 1.2) calc(var(--g) * 3) var(--bayang-pelan);
 }
 .dock-isi {
   position: relative;
   display: flex;
-  padding: calc(var(--u) * 0.95) calc(var(--u) * 1.3) 0;
+  align-items: center;
   height: 100%;
+  padding: 0 calc(var(--g) * 2);
   box-sizing: border-box;
 }
 .app {
-  --r: calc(var(--u) * 1.45);
+  --r: calc(var(--g) * 1.75);
   --s: 1.12;
   position: relative;
   flex: 0 0 auto;
-  width: calc(var(--u) * 5.5);
-  height: calc(var(--u) * 5.5);
-  margin-right: calc(var(--u) * 1.5);
+  width: calc(var(--g) * 7);
+  height: calc(var(--g) * 7);
+  margin-right: calc(var(--g) * 2);
 }
 .app:last-child { margin-right: 0; }
 .app .glyph {
@@ -580,15 +583,15 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
   position: absolute;
   left: 50%;
   top: 100%;
-  margin-top: calc(var(--u) * 0.55);
+  margin-top: calc(var(--g) * 3);
   font-size: calc(var(--u) * 1.3);
   font-weight: 400;
   letter-spacing: 0.01em;
   white-space: nowrap;
   color: var(--ink);
-  text-shadow: 0 calc(var(--u) * 0.05) calc(var(--u) * 0.35) var(--teks-bayang);
+  text-shadow: 0 calc(var(--g) * 0.06) calc(var(--g) * 0.4) var(--teks-bayang);
   opacity: 0;
-  transform: translate3d(-50%, calc(var(--u) * -0.3), 0) scale(0.9);
+  transform: translate3d(-50%, calc(var(--g) * -0.4), 0) scale(0.9);
   transition: opacity 0.3s ease, transform 0.4s var(--ease);
 }
 .app.is-focus .app-nama {
@@ -596,30 +599,30 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
   transform: translate3d(-50%, 0, 0) scale(0.9);
 }
 
-/* ---------- toast (kaca kecil) ---------- */
+/* ---------- toast ---------- */
 .toast {
   position: absolute;
   left: 50%;
-  top: calc(var(--u) * 2.2);
-  padding: calc(var(--u) * 0.75) calc(var(--u) * 1.6);
-  border-radius: calc(var(--u) * 3);
+  top: calc(var(--g) * 3);
+  padding: calc(var(--g) * 1) calc(var(--g) * 2);
+  border-radius: calc(var(--g) * 4);
   font-size: calc(var(--u) * 1.25);
   font-weight: 500;
   line-height: 1.3;
   white-space: nowrap;
   color: var(--ink);
-  background: var(--kaca-padat);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 calc(var(--u) * 0.6) calc(var(--u) * 1.6) rgba(12, 5, 26, 0.3);
+  background-color: var(--kaca-padat);
+  box-shadow: inset 0 0 0 1px var(--garis), 0 calc(var(--g) * 0.8) calc(var(--g) * 2) var(--bayang-pelan);
   opacity: 0;
   visibility: hidden;
-  transform: translate3d(-50%, calc(var(--u) * -0.6), 0);
+  transform: translate3d(-50%, calc(var(--g) * -0.8), 0);
   transition: opacity 0.3s ease, transform 0.45s var(--ease), visibility 0s linear 0.45s;
 }
 @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
   .toast {
-    background: var(--kaca-warna);
-    -webkit-backdrop-filter: blur(calc(var(--u) * 1.6)) saturate(1.7);
-    backdrop-filter: blur(calc(var(--u) * 1.6)) saturate(1.7);
+    background-color: var(--kaca-warna);
+    -webkit-backdrop-filter: blur(calc(var(--u) * 1.6)) saturate(1.25);
+    backdrop-filter: blur(calc(var(--u) * 1.6)) saturate(1.25);
   }
 }
 .toast.show {
@@ -629,12 +632,32 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
   transition-delay: 0s;
 }
 
-/* ---------- kaca ringan (tema.json "kacaRingan": true) buat TV yang berat ---------- */
+/* ---------- kaca ringan / tanpa blur (tema.json "kacaRingan": true, atau ?kaca=ringan) ---------- */
 .kaca-ringan .kaca, .kaca-ringan .toast {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   background-color: var(--kaca-padat);
 }
+
+/* ---------- garis bantu (?grid=1) ---------- */
+.grid-bantu {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 8;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(to right, rgba(80, 220, 255, 0.07) 0, rgba(80, 220, 255, 0.07) 1px, transparent 1px, transparent calc(var(--g) * 2)),
+                    repeating-linear-gradient(to bottom, rgba(80, 220, 255, 0.07) 0, rgba(80, 220, 255, 0.07) 1px, transparent 1px, transparent calc(var(--g) * 2));
+}
+.grid-bantu .gv, .grid-bantu .gh {
+  position: absolute;
+  background: rgba(80, 230, 255, 0.75);
+}
+.grid-bantu .gv { top: 0; width: 1px; height: 100%; }
+.grid-bantu .gh { left: 0; height: 1px; width: 100%; }
+.grid-bantu .tengah { background: rgba(255, 120, 200, 0.8); }
 
 /* ---------- mode tidur: jam di belakang gunung, hampir hitam ---------- */
 .tidur {
@@ -655,7 +678,7 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
   transition-delay: 0s;
 }
 .dunia-tidur {
-  background: radial-gradient(70% 60% at 50% 70%, #120d1c 0%, #050407 70%);
+  background: radial-gradient(70% 60% at 50% 70%, #100e18 0%, #050407 70%);
 }
 .tidur-geser {
   position: absolute;
@@ -673,27 +696,27 @@ html.mode-terang .jam-gelap, html.mode-gelap .jam-terang {
 }
 .dunia-tidur .tanggal {
   top: 8%;
-  color: rgba(255, 246, 250, 0.7);
+  color: rgba(245, 245, 247, 0.7);
   text-shadow: none;
 }
 .dunia-tidur .cuaca { opacity: 1; }
 /* gunung depan HARUS padat (opacity 1) biar beneran nutupin angka jam.
    Digelapin pake filter, bukan opacity, soalnya opacity bikin angka jamnya tembus. */
-.tidur-depan { filter: brightness(0.5) saturate(0.85); }
+.tidur-depan { filter: brightness(0.5) saturate(0.7); }
 .tidur-depan.siap { opacity: 1; }
 .tidur-catatan {
   position: absolute;
   left: 50%;
-  bottom: calc(var(--u) * 4);
-  padding: calc(var(--u) * 0.7) calc(var(--u) * 1.5);
-  border-radius: calc(var(--u) * 3);
+  bottom: calc(var(--g) * 5);
+  padding: calc(var(--g) * 1) calc(var(--g) * 2);
+  border-radius: calc(var(--g) * 4);
   font-size: calc(var(--u) * 1.25);
   white-space: nowrap;
-  color: rgba(255, 246, 250, 0.82);
-  background: rgba(255, 255, 255, 0.07);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  color: rgba(245, 245, 247, 0.82);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
   opacity: 0;
-  transform: translate3d(-50%, calc(var(--u) * 0.5), 0);
+  transform: translate3d(-50%, calc(var(--g) * 0.6), 0);
   transition: opacity 0.6s ease, transform 0.6s var(--ease);
 }
 .tidur-catatan.on {

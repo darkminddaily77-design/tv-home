@@ -1,32 +1,32 @@
 {
   "backend": "tv",
-  "mode": "otomatis",
+  "mode": "gelap",
   "latar": "gradasi",
   "belakang": "wallpaper/langit.svg",
   "depan": "wallpaper/depan.svg",
   "jamWarna": {
     "gelap": [
-      "#ffc6dc",
-      "#f6d5f0",
-      "#d7d2ff"
+      "#ecebf3",
+      "#dcd8ee",
+      "#c9c4e5"
     ],
     "terang": [
-      "#e0457e",
-      "#b84fc0",
-      "#7558ef"
+      "#b0476f",
+      "#8a4fa6",
+      "#5f55c8"
     ],
     "pemandangan": [
-      "#ff97c1",
-      "#f4aee0",
-      "#b9adff"
+      "#ecebf3",
+      "#dcd8ee",
+      "#c9c4e5"
     ],
     "tidur": [
-      "#ff97c1",
-      "#f4aee0",
-      "#b9adff"
+      "#ecebf3",
+      "#dcd8ee",
+      "#c9c4e5"
     ]
   },
-  "jamAtas": 17.2,
+  "jamAtas": 17.7,
   "jamUkuran": 16,
   "tidurMenit": 10,
   "matiSetelahTidurMenit": 60,

@@ -1,8 +1,8 @@
 {
   "widget": [
     {"slot": "kiri-atas", "jenis": "cuaca"},
-    {"slot": "kiri-bawah", "gaya": "album", "ikon": "ikon/youtube.svg", "label": "Tanpa iklan", "judul": "YouTube", "app": "xvvl3S1bvH.TizenBrewStandalone"},
-    {"slot": "kanan-atas", "gaya": "gradasi", "warna": ["#5a3fd2", "#9b3fb8"], "ikon": "ikon/bulan.svg", "label": "Mode tidur", "judul": "Tidurin layar", "aksi": "tidur"},
+    {"slot": "kiri-bawah", "gaya": "kaca", "ikon": "ikon/youtube.svg", "label": "Tanpa iklan", "judul": "YouTube", "app": "xvvl3S1bvH.TizenBrewStandalone"},
+    {"slot": "kanan-atas", "gaya": "kaca", "ikon": "ikon/bulan.svg", "label": "Mode tidur", "judul": "Tidurin layar", "aksi": "tidur"},
     {"slot": "kanan-bawah", "gaya": "kaca", "ikon": "ikon/spotify.svg", "label": "Musik", "judul": "Spotify", "app": "3201606009684"}
   ],
   "dock": [

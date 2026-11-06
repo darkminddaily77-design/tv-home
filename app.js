@@ -8,13 +8,9 @@
   var BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli',
     'Agustus', 'September', 'Oktober', 'November', 'Desember'];
   var SIMPAN = 'hometv.fokus3';
-  var WARNA_JAM = {
-    gelap: ['#ffc6dc', '#f6d5f0', '#d7d2ff'],
-    terang: ['#e0457e', '#b84fc0', '#7558ef'],
-    pemandangan: ['#ff97c1', '#f4aee0', '#b9adff'],
-    tidur: ['#ff97c1', '#f4aee0', '#b9adff']
-  };
-  var TINT = { gradasi: '62, 24, 58', pemandangan: '70, 52, 96' };
+  // jam: perak keunguan yang kalem (bukan pink). Yang terang cuma buat mode terang (opsional)
+  var PERAK = ['#ecebf3', '#dcd8ee', '#c9c4e5'];
+  var WARNA_JAM = { gelap: PERAK, terang: ['#b0476f', '#8a4fa6', '#5f55c8'], pemandangan: PERAK, tidur: PERAK };
   var PARAM = location.search;
 
   var tema = {};
@@ -125,10 +121,14 @@
     petir: '<g transform="translate(0 -2.6)">' + AWAN + '</g><path d="M12.8 16.2l-2 3.2h2.8l-1.8 3"/>',
     kabut: '<path d="M4 9h16M3 13h18M5 17h14"/>'
   };
+  function namaIkon(nama, siang) {
+    if (nama === 'cerah' && siang === false) return 'malam';
+    return IKON[nama] ? nama : 'berawan';
+  }
   function svgCuaca(nama, siang) {
-    if (nama === 'cerah' && siang === false) nama = 'malam';
-    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' +
-      (IKON[nama] || IKON.berawan) + '</svg>';
+    var n = namaIkon(nama, siang);
+    return '<span class="ik-' + n + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" ' +
+      'stroke-linecap="round" stroke-linejoin="round">' + IKON[n] + '</svg></span>';
   }
   function ikonCuaca(nama, siang) {
     var s = buat('span', 'ikon-cuaca');
@@ -213,11 +213,9 @@
     if (w && w[mode] && w[mode].length > 1) return w[mode];
     return WARNA_JAM[mode];
   }
+  // gelap selalu. Terang cuma kalau dipilih sendiri (tema.json "mode": "terang" atau ?mode=terang)
   function modeDiminta() {
-    var m = param('mode') || tema.mode || 'otomatis';
-    if (m === 'terang' || m === 'gelap') return m;
-    var jam = new Date().getHours();
-    return jam >= 6 && jam < 18 ? 'terang' : 'gelap';
+    return (param('mode') || tema.mode) === 'terang' ? 'terang' : 'gelap';
   }
   function terapkanMode() {
     var m = modeDiminta();
@@ -229,8 +227,8 @@
     tema = t || {};
     var latar = param('latar') || tema.latar || 'gradasi';
     if (latar !== 'pemandangan') latar = 'gradasi';
-    document.body.className = 'latar-' + latar + (tema.kacaRingan ? ' kaca-ringan' : '');
-    document.documentElement.style.setProperty('--tint', tema.tint || TINT[latar]);
+    var ringan = tema.kacaRingan || param('kaca') === 'ringan';
+    document.body.className = 'latar-' + latar + (ringan ? ' kaca-ringan' : '');
     window.Aksi.pakai(tema.backend || 'mac');
 
     var belakang = tema.belakang || 'wallpaper/langit.svg', depan = tema.depan || 'wallpaper/depan.svg';
@@ -244,14 +242,14 @@
     el.jamGelap.style.backgroundImage = gradJam(warnaJam(latar === 'pemandangan' ? 'pemandangan' : 'gelap'));
     el.jamTerang.style.backgroundImage = gradJam(warnaJam(latar === 'pemandangan' ? 'pemandangan' : 'terang'));
     el.tidurJam.style.backgroundImage = gradJam(warnaJam('tidur'));
-    var atas = typeof tema.jamAtas === 'number' ? tema.jamAtas : 17.2;
+    var atas = typeof tema.jamAtas === 'number' ? tema.jamAtas : 17.7;
     var ukuran = typeof tema.jamUkuran === 'number' ? tema.jamUkuran : 16;
     [el.jamGelap, el.jamTerang].forEach(function (j) {
       j.style.top = atas + '%';
       j.style.fontSize = 'calc(var(--w) * ' + ukuran + ')';
     });
-    // tanggal duduk pas di atas angka jam
-    el.tanggalBaris.style.top = (atas + 0.267 * ukuran - 9.4) + '%';
+    // tanggal duduk di atas angka jam (bawaan: sejajar tepi atas widget, 11g)
+    el.tanggalBaris.style.top = (atas + 0.267 * ukuran - 6.33) + '%';
 
     terapkanMode();
     idleMenit = typeof tema.tidurMenit === 'number' ? tema.tidurMenit : 10;
@@ -269,8 +267,7 @@
   function isiWidgetCuaca(w) {
     var isi = w.isi, c = infoCuaca(), d = cuacaData;
     isi.innerHTML = '';
-    w.muka.className = 'permukaan rim warna-tetap cuaca-w' + (d ? (d.siang === false ? ' malam' : (d.ikon === 'hujan' || d.ikon === 'petir') ? ' hujan'
-      : (d.ikon === 'berawan' || d.ikon === 'kabut') ? ' berawan' : '') : ' berawan');
+    w.muka.className = 'permukaan rim kaca cuaca-w';
     var atas = buat('div', 'cuaca-atas');
     var kiri = buat('div');
     kiri.appendChild(buat('div', 'kota', c.kota));
@@ -284,7 +281,7 @@
     var kanan = buat('div', 'kondisi');
     kanan.appendChild(ikonCuaca(d.ikon, d.siang));
     kanan.appendChild(buat('div', null, d.teks));
-    if (typeof d.tinggi === 'number') kanan.appendChild(buat('div', null, 'T:' + d.tinggi + '°  R:' + d.rendah + '°'));
+    if (typeof d.tinggi === 'number') kanan.appendChild(buat('div', 'tr', 'T:' + d.tinggi + '°  R:' + d.rendah + '°'));
     atas.appendChild(kiri);
     atas.appendChild(kanan);
     isi.appendChild(atas);
@@ -308,7 +305,7 @@
     if (bisa) n.appendChild(buat('div', 'bayang-fokus'));
 
     if (w.jenis === 'cuaca') {
-      var muka = permukaan('warna-tetap cuaca-w');
+      var muka = permukaan('kaca cuaca-w');
       var isi = buat('div', 'isi');
       muka.appendChild(isi);
       n.appendChild(muka);
@@ -577,7 +574,23 @@
     diLuar = false;
   });
 
+  // ---------- garis bantu buat ngecek kerapian (?grid=1) ----------
+  function garisBantu() {
+    var g = buat('div', 'grid-bantu');
+    var u = 0.8;  // 1 g = 0.8% lebar
+    [6, 35, 90, 119].forEach(function (x) {
+      var v = buat('div', 'gv'); v.style.left = (x * u) + '%'; g.appendChild(v);
+    });
+    var t = buat('div', 'gv tengah'); t.style.left = '50%'; g.appendChild(t);
+    [11, 29, 31, 49, 53, 64].forEach(function (y) {
+      var h = buat('div', 'gh'); h.style.top = (y * u / 56.25 * 100) + '%'; g.appendChild(h);
+    });
+    var tm = buat('div', 'gh tengah'); tm.style.top = (58.5 * u / 56.25 * 100) + '%'; g.appendChild(tm);
+    document.querySelector('.stage').appendChild(g);
+  }
+
   // ---------- mulai ----------
+  if (param('grid') === '1') garisBantu();
   tick();
   var fontSiap = document.fonts && document.fonts.load ? document.fonts.load('300 100px Satoshi') : Promise.resolve();
   Promise.race([fontSiap, new Promise(function (ok) { setTimeout(ok, 1500); })]).then(function () {
