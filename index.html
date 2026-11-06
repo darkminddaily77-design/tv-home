@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="id" class="mode-gelap">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Rumah</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500&amp;display=swap">
+<link rel="stylesheet" href="app.css">
+</head>
+<body class="latar-gradasi">
+
+<!-- dunia = latar 16:9 yang nutup layar. Urutan lapis: latar, tanggal, jam, gunung depan (kalau "pemandangan") -->
+<div class="dunia" aria-hidden="true">
+  <div class="gradasi gradasi-gelap">
+    <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div>
+  </div>
+  <div class="gradasi gradasi-terang">
+    <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div>
+  </div>
+  <img class="lapis" id="belakang" alt="">
+  <div class="tanggal" id="tanggalBaris"><span id="tanggal"></span><span class="cuaca" id="cuaca"></span></div>
+  <div class="jam jam-gelap" id="jamGelap"></div>
+  <div class="jam jam-terang" id="jamTerang"></div>
+  <img class="lapis" id="depan" alt="">
+</div>
+<div class="grain" aria-hidden="true"></div>
+<div class="gelap-bawah" aria-hidden="true"></div>
+
+<main class="stage">
+  <div class="kolom kolom-kiri" id="kolomKiri"></div>
+  <div class="kolom kolom-kanan" id="kolomKanan"></div>
+  <div class="dock" id="dock">
+    <div class="dock-kaca kaca rim"></div>
+    <div class="dock-isi" id="dockIsi"></div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</main>
+
+<!-- Mode tidur: layar tetap nyala, jam besar di belakang gunung, latar hampir hitam -->
+<div class="tidur" id="tidur" aria-hidden="true">
+  <div class="dunia dunia-tidur">
+    <div class="tidur-geser" id="tidurGeser">
+      <div class="tanggal"><span id="tidurTanggal"></span><span class="cuaca" id="tidurCuaca"></span></div>
+      <div class="jam" id="tidurJam"></div>
+    </div>
+    <img class="lapis tidur-depan" id="tidurDepan" alt="">
+  </div>
+  <div class="tidur-catatan" id="tidurCatatan">Layar mati 30 detik lagi, pencet tombol apa aja buat batal</div>
+</div>
+
+<script src="aksi.js"></script>
+<script src="power.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

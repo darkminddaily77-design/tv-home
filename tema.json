@@ -1,0 +1,40 @@
+{
+  "backend": "tv",
+  "mode": "otomatis",
+  "latar": "gradasi",
+  "belakang": "wallpaper/langit.svg",
+  "depan": "wallpaper/depan.svg",
+  "jamWarna": {
+    "gelap": [
+      "#ffc6dc",
+      "#f6d5f0",
+      "#d7d2ff"
+    ],
+    "terang": [
+      "#e0457e",
+      "#b84fc0",
+      "#7558ef"
+    ],
+    "pemandangan": [
+      "#ff97c1",
+      "#f4aee0",
+      "#b9adff"
+    ],
+    "tidur": [
+      "#ff97c1",
+      "#f4aee0",
+      "#b9adff"
+    ]
+  },
+  "jamAtas": 17.2,
+  "jamUkuran": 16,
+  "tidurMenit": 10,
+  "matiSetelahTidurMenit": 60,
+  "kacaRingan": false,
+  "cuaca": {
+    "kota": "Denpasar",
+    "lat": -8.65,
+    "lon": 115.22,
+    "sumber": "langsung"
+  }
+}

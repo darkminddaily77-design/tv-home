@@ -1,0 +1,16 @@
+{
+  "widget": [
+    {"slot": "kiri-atas", "jenis": "cuaca"},
+    {"slot": "kiri-bawah", "gaya": "album", "ikon": "ikon/youtube.svg", "label": "Tanpa iklan", "judul": "YouTube", "app": "xvvl3S1bvH.TizenBrewStandalone"},
+    {"slot": "kanan-atas", "gaya": "gradasi", "warna": ["#5a3fd2", "#9b3fb8"], "ikon": "ikon/bulan.svg", "label": "Mode tidur", "judul": "Tidurin layar", "aksi": "tidur"},
+    {"slot": "kanan-bawah", "gaya": "kaca", "ikon": "ikon/spotify.svg", "label": "Musik", "judul": "Spotify", "app": "3201606009684"}
+  ],
+  "dock": [
+    {"label": "YouTube", "ikon": "ikon/youtube.svg", "app": "xvvl3S1bvH.TizenBrewStandalone"},
+    {"label": "Browser", "ikon": "ikon/browser.svg", "app": "3202010022079"},
+    {"label": "Netflix", "ikon": "ikon/netflix.svg", "app": "3201907018807"},
+    {"label": "Spotify", "ikon": "ikon/spotify.svg", "app": "3201606009684"},
+    {"label": "Mode tidur", "ikon": "ikon/bulan.svg", "aksi": "tidur"},
+    {"label": "Matiin layar", "ikon": "ikon/power.svg", "tombol": "KEY_POWER"}
+  ]
+}
