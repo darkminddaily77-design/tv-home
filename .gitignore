@@ -1,0 +1,7 @@
+# Foto pribadi nggak boleh masuk repo publik
+*.jpg
+*.jpeg
+*.heic
+*.HEIC
+*.JPG
+*.JPEG
