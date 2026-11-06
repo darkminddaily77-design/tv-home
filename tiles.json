@@ -1,12 +1,11 @@
 {
   "widget": [
     {"slot": "kiri-atas", "jenis": "cuaca"},
-    {"slot": "kiri-bawah", "gaya": "kaca", "ikon": "ikon/youtube.svg", "label": "Tanpa iklan", "judul": "YouTube", "app": "xvvl3S1bvH.TizenBrewStandalone"},
+    {"slot": "kiri-bawah", "gaya": "kaca", "ikon": "ikon/youtube.svg", "label": "Tanpa iklan", "judul": "YouTube", "modulTizenBrew": "npm/@foxreis/tizentube"},
     {"slot": "kanan-atas", "gaya": "kaca", "ikon": "ikon/bulan.svg", "label": "Mode tidur", "judul": "Tidurin layar", "aksi": "tidur"},
     {"slot": "kanan-bawah", "gaya": "kaca", "ikon": "ikon/spotify.svg", "label": "Musik", "judul": "Spotify", "app": "3201606009684"}
   ],
   "dock": [
-    {"label": "YouTube", "ikon": "ikon/youtube.svg", "app": "xvvl3S1bvH.TizenBrewStandalone"},
     {"label": "Browser", "ikon": "ikon/browser.svg", "app": "3202010022079"},
     {"label": "Netflix", "ikon": "ikon/netflix.svg", "app": "3201907018807"},
     {"label": "Spotify", "ikon": "ikon/spotify.svg", "app": "3201606009684"},

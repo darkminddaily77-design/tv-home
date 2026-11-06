@@ -9,6 +9,10 @@
   'use strict';
 
   var TV = 'http://127.0.0.1:8097';
+  // app yang NGGAK BOLEH dibuka dari Zee Home: YouTube biasa (pake iklan). YouTube cuma lewat TizenTube.
+  var DILARANG = ['111299001912'];
+  var TIZENBREW = 'xvvl3S1bvH.TizenBrewStandalone';
+  var TIZENTUBE = 'npm/@foxreis/tizentube';
   var BELUM = 'Belum nyambung ke monitor, coba lagi sebentar';
 
   function enc(s) { return encodeURIComponent(String(s)); }
@@ -83,9 +87,51 @@
     var ctrl = window.AbortController ? new AbortController() : null;
     var t = setTimeout(function () { if (ctrl) ctrl.abort(); }, 1500);
     try {
-      fetch(m1 + path, { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined })
+      fetch(m1 + path, { cache: 'no-store', keepalive: true, signal: ctrl ? ctrl.signal : undefined })
         .then(function () { clearTimeout(t); }, function () { clearTimeout(t); });
     } catch (e) { clearTimeout(t); }
+  }
+
+  // ---------- buka modul TizenBrew langsung (mis. TizenTube) ----------
+  // Sama persis kayak UI TizenBrew sendiri (reisxd/TizenBrew, tizenbrew-ui/src/components/WebSocketClient.js):
+  // websocket ke service TizenBrew di 127.0.0.1:8081 -> GetModules (4) -> LaunchModule (5) dengan objek modulnya
+  // -> pindah ke module.appPath. Debugger TizenBrew yang nyuntik script modulnya ke halaman itu.
+  function bukaModulTv(nama) {
+    return new Promise(function (selesai) {
+      var beres = false, ws = null, coba = 0;
+      function akhir(h) {
+        if (beres) return;
+        beres = true;
+        clearTimeout(batas);
+        try { if (ws && !h.ok) ws.close(); } catch (e) { /* abaikan */ }
+        selesai(h);
+      }
+      var batas = setTimeout(function () { akhir({ ok: false, error: 'TizenBrew nggak jawab' }); }, 6000);
+      var host = location.port === '8081' ? location.host : '127.0.0.1:8081';
+      try { ws = new WebSocket('ws://' + host); } catch (e) { return akhir({ ok: false, error: 'TizenBrew nggak bisa dihubungi' }); }
+      ws.onerror = function () { akhir({ ok: false, error: 'TizenBrew nggak bisa dihubungi' }); };
+      ws.onopen = function () { ws.send(JSON.stringify({ type: 4 })); };
+      ws.onmessage = function (ev) {
+        var pesan = {};
+        try { pesan = JSON.parse(ev.data); } catch (e) { return; }
+        if (pesan.type !== 4) return;
+        if (!pesan.payload) {                       // daftar modul belum siap: coba lagi kayak UI aslinya
+          if (++coba > 8) return akhir({ ok: false, error: 'daftar modul TizenBrew belum siap' });
+          return setTimeout(function () { ws.send(JSON.stringify({ type: 4 })); }, 500);
+        }
+        var modul = null;
+        for (var i = 0; i < pesan.payload.length; i++) {
+          if (pesan.payload[i] && pesan.payload[i].fullName === nama) modul = pesan.payload[i];
+        }
+        if (!modul || !modul.appPath) return akhir({ ok: false, error: 'TizenTube belum dipasang di TizenBrew' });
+        ws.send(JSON.stringify({ type: 5, payload: modul }));
+        akhir({ ok: true, appPath: modul.appPath, langsung: !modul.evaluateScriptOnDocumentStart });
+        // kasih waktu dikit biar service TizenBrew nyimpen modulnya + niat ke M1 nyampe, baru pindah
+        setTimeout(function () {
+          if (!modul.evaluateScriptOnDocumentStart) location.href = modul.appPath;
+        }, 250);
+      };
+    });
   }
 
   var aktif = 'mac';
@@ -102,7 +148,20 @@
     },
     jedaJaga: function (menit) { keM1('/jeda?menit=' + enc(menit || 10)); },
     // buka app dengan sengaja: kasih tau penjaga dulu biar app-nya nggak "ditarik balik"
-    bukaApp: function (id) { keM1('/niat?app=' + enc(id)); return BACKEND[aktif].bukaApp(id); },
+    bukaApp: function (id) {
+      if (DILARANG.indexOf(String(id)) >= 0) return Promise.resolve({ ok: false, error: 'YouTube biasa dimatiin, pake tile YouTube (tanpa iklan)' });
+      keM1('/niat?app=' + enc(id));
+      return BACKEND[aktif].bukaApp(id);
+    },
+    // buka modul TizenBrew (bawaan: TizenTube) langsung, nggak lewat daftar modul / Autolaunch
+    bukaModul: function (nama) {
+      nama = nama || TIZENTUBE;
+      // penjaga di M1: ini disengaja, TizenBrew bakal tampil lama (nonton), jangan ditarik balik
+      keM1('/niat?app=' + enc(TIZENBREW));
+      if (aktif !== 'tv') return BACKEND[aktif].bukaApp(TIZENBREW);   // preview Mac: cuma buka TizenBrew
+      return bukaModulTv(nama);
+    },
+    bukaTizenTube: function () { return window.Aksi.bukaModul(TIZENTUBE); },
     // matiin layar: penjaga istirahat 2 menit dulu biar nggak "narik balik" pas monitor lagi mati
     tombol: function (key) { if (key === 'KEY_POWER') keM1('/jeda?menit=2'); return BACKEND[aktif].tombol(key); },
     bukaUrl: function (url) { return BACKEND[aktif].bukaUrl(url); },

@@ -251,8 +251,10 @@
     if (latar !== 'pemandangan' && latar !== 'foto') latar = 'gradasi';
     if (latar === 'foto' && !foto) latar = 'gradasi';
     var ringan = tema.kacaRingan || param('kaca') === 'ringan';
+    // hemat = buat monitor asli (chip lemah): tanpa animasi terus-terusan, bayangan kecil, transisi pendek
+    var hemat = tema.hemat || param('hemat') === '1';
     // mode foto mulai dari gradasi dulu, baru ganti kalau fotonya udah kebuka
-    document.body.className = 'latar-' + (latar === 'foto' ? 'gradasi' : latar) + (ringan ? ' kaca-ringan' : '');
+    document.body.className = 'latar-' + (latar === 'foto' ? 'gradasi' : latar) + (ringan ? ' kaca-ringan' : '') + (hemat ? ' hemat' : '');
     document.documentElement.style.setProperty('--warna-foto', tema.wallpaperWarna || '#000000');
     if (latar === 'foto') muatFoto(foto);
     window.Aksi.pakai(tema.backend || 'mac');
@@ -327,7 +329,7 @@
   function bangunWidget(w) {
     var slot = String(w.slot || '');
     var wadah = slot.indexOf('kanan') === 0 ? el.kolomKanan : el.kolomKiri;
-    var bisa = !!(w.app || w.url || w.tombol || w.aksi);
+    var bisa = !!(w.app || w.url || w.tombol || w.aksi || w.modulTizenBrew);
     var n = buat('div', 'widget slot-' + (slot.indexOf('bawah') > 0 ? 'bawah' : 'atas') + (bisa ? ' bisa-fokus' : ''));
     n.appendChild(buat('div', 'bayang'));
     if (bisa) n.appendChild(buat('div', 'bayang-fokus'));
@@ -555,8 +557,12 @@
       toast(hasil.belumNyambung ? hasil.error : 'Gagal: ' + (hasil.error || 'nggak tahu kenapa'), 4500);
     }
     var nama = t.judul && t.label && t.judul.length < t.label.length ? t.judul : (t.judul || t.label);
-    if (t.app || t.tombol || t.url) diLuar = true;
-    if (t.app) {
+    if (t.app || t.tombol || t.url || t.modulTizenBrew) diLuar = true;
+    if (t.modulTizenBrew) {
+      // YouTube tanpa iklan: langsung buka TizenTube di dalam TizenBrew
+      toast('Buka ' + (t.judul || t.label) + '…');
+      window.Aksi.bukaModul(t.modulTizenBrew).then(function (h) { if (!h.ok) gagal(h); });
+    } else if (t.app) {
       toast('Buka ' + nama + '…');
       window.Aksi.bukaApp(t.app).then(function (h) { if (!h.ok) gagal(h); });
     } else if (t.tombol) {

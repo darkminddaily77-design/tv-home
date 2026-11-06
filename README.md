@@ -4,8 +4,8 @@ Home screen buat monitor Samsung yang jalan langsung di monitor lewat TizenBrew.
 
 Isinya:
 - jam besar di tengah, tanggal dan cuaca Denpasar (data asli dari Open-Meteo),
-- widget: cuaca, YouTube tanpa iklan (lewat TizenBrew), Mode tidur, Spotify,
-- dock: YouTube, Browser, Netflix, Spotify, Mode tidur, Matiin layar,
+- widget: cuaca, YouTube tanpa iklan (langsung buka TizenTube), Mode tidur, Spotify,
+- dock: Browser, Netflix, Spotify, Mode tidur, Lainnya (Menu Samsung), Matiin layar,
 - tampilan gelap yang kalem: kaca gelap, warna cuma di ikon kecil,
 - Mode tidur: layar tetap nyala, cuma jam besar di belakang gunung. Masuk sendiri kalau 10 menit nggak ada tombol dipencet, dan layar dimatiin setelah 60 menit (ada peringatan 30 detik sebelumnya, pencet tombol apa aja buat batal).
 
